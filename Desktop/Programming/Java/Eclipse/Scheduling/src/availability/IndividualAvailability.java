@@ -21,7 +21,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class IndividualAvailability {
+public class IndividualAvailability 
+{
 	public final static int numEmployees = 5;
 	public final static ArrayList<String> hours = new ArrayList<String>(24);
 	public static String[] employees = new String[numEmployees];
@@ -32,6 +33,7 @@ public class IndividualAvailability {
 		// create file input and output stream objects for the excel sheet
 		FileInputStream fis = new FileInputStream("/Users/Jorge/Downloads/Availability.xlsx");
 		FileOutputStream fos = new FileOutputStream("/Users/Jorge/Downloads/EmployeeAvailability.xls");
+		
 		// create an object for work book
 		Workbook wbIn = WorkbookFactory.create(fis);
 		// create a new sheet
@@ -41,6 +43,40 @@ public class IndividualAvailability {
 		formatSpreadsheet(wbIn, sheet, fos);
 		fos.close();
 		fis.close();
+	}
+	
+	/**
+	 * Using the returned Dynamic Matrix of Dynamic Matrices, formatSpreadsheet imports that multi-dimensional matrix into
+	 * an excel sheet for each individual employee
+	 * @param wbIn
+	 * @param sheetIn
+	 * @param fos
+	 * @throws IOException
+	 */
+	
+	public static void formatSpreadsheet(Workbook wbIn, Sheet sheetIn, FileOutputStream fos) throws IOException
+	{
+		Sheet employeeSheet;
+		Workbook wbOut = new HSSFWorkbook();
+		for(int i = 0; i < numEmployees; i++)
+		{
+			employeeSheet = wbOut.createSheet(employees[i]);
+			initializeSpreadsheet(wbOut, employeeSheet);
+			ArrayList<ArrayList<Integer>> times = getAvailability(sheetIn, wbIn, i);
+			for(int j = 0; j < 7; j++)
+			{
+				Row newRow = employeeSheet.createRow(j + 1);
+				Cell nameCell = newRow.createCell(0);
+			    nameCell.setCellValue(days[j]);	
+
+				for (int k = 0; k < 24; k++)
+				{
+					Cell timeCell = newRow.createCell(k + 1);
+					timeCell.setCellValue(times.get(j).get(k));
+				}
+			}		
+		}
+		wbOut.write(fos);
 	}
 	
 	/**
@@ -79,10 +115,10 @@ public class IndividualAvailability {
 	}
 	
 	/**
-	 * parseAvailability searches throught the given cell which will either contain "None;" or availability
+	 * parseAvailability searches through the given cell which will either contain "None;" or availability
 	 * in the format of "Time AM/PM;"
 	 * 
-	 * It searches for thet semicolon and stores everything before it, if what is stores is included in the 
+	 * It searches for the semicolon and stores everything before it, if what is stores is included in the 
 	 * hours global variable then a 1 is added to the return ArrayList, 0 if it does not appear
 	 * 
 	 * @param cell
@@ -181,40 +217,6 @@ public class IndividualAvailability {
 		}
 		
 		return sh;
-	}
-	
-	/**
-	 * Using the returned Dynamic Matrix of Dynamic Matrices, formatSpreadsheet imports that multi-dimensional matrix into
-	 * an excel sheet for each individual employee
-	 * @param wbIn
-	 * @param sheetIn
-	 * @param fos
-	 * @throws IOException
-	 */
-	
-	public static void formatSpreadsheet(Workbook wbIn, Sheet sheetIn, FileOutputStream fos) throws IOException
-	{
-		Sheet employeeSheet;
-		Workbook wbOut = new HSSFWorkbook();
-		for(int i = 0; i < numEmployees; i++)
-		{
-			employeeSheet = wbOut.createSheet(employees[i]);
-			initializeSpreadsheet(wbOut, employeeSheet);
-			ArrayList<ArrayList<Integer>> times = getAvailability(sheetIn, wbIn, i);
-			for(int j = 0; j < 7; j++)
-			{
-				Row newRow = employeeSheet.createRow(j + 1);
-				Cell nameCell = newRow.createCell(0);
-			    nameCell.setCellValue(days[j]);	
-
-				for (int k = 0; k < 24; k++)
-				{
-					Cell timeCell = newRow.createCell(k + 1);
-					timeCell.setCellValue(times.get(j).get(k));
-				}
-			}		
-		}
-		wbOut.write(fos);
 	}
 	
 	/**
